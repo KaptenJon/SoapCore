@@ -4,19 +4,13 @@ This directory contains various sample projects demonstrating SoapCore functiona
 
 ## Sample Projects
 
-### Classic Samples (.NET Core 3.1)
-
-#### Server
-A .NET Core 3.1 web application hosting a SOAP service.
+### Server (.NET 8)
+A .NET 8 web application hosting a SOAP service.
 - **Port**: 5050
-- **Target Framework**: netcoreapp3.1
+- **Target Framework**: net8.0
 
-#### Client
-A .NET Core 3.1 console application consuming the SOAP service.
-- **Target Framework**: netcoreapp3.1
-
-#### ServiceReferenceClient
-A .NET 8 console application with generated service reference consuming the SOAP service.
+### Client (.NET 8)
+A .NET 8 console application consuming the SOAP service.
 - **Target Framework**: net8.0
 
 ### .NET 10 Sample
@@ -48,36 +42,34 @@ Shared model library used across all samples.
 
 2. **Run a server** (choose one):
    ```bash
-   # Classic server (.NET Core 3.1)
-   cd Server
+   # .NET 10 server (recommended)
+   cd Net10Server
    dotnet run
 
-   # Or .NET 10 server
-   cd Net10Server
+   # .NET 8 server
+   cd Server
    dotnet run
    ```
 
 3. **Run a client** (in a separate terminal):
    ```bash
-   # Classic client
-   cd Client
+   # .NET 10 client (recommended)
+   cd Net10Client
    dotnet run
 
-   # Or .NET 10 client
-   cd Net10Client
+   # .NET 8 client
+   cd Client
    dotnet run
    ```
 
 ## Port Assignments
 
-- **5050**: Classic Server (.NET Core 3.1)
+- **5050**: Server (.NET 8)
 - **5060**: Net10Server (.NET 10)
 
 Make sure the client connects to the correct port based on which server you're running.
 
 ## Requirements
 
-- .NET Core 3.1 SDK (for classic samples)
-- .NET 8 SDK (for ServiceReferenceClient)
-- .NET 10 SDK (for .NET 10 samples)
-- SoapCore library
+- .NET 8 SDK (for Server, Client, and ServiceReferenceClient)
+- .NET 10 SDK (for .NET 10 samples - recommended)

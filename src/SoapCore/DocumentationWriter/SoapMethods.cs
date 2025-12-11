@@ -6,6 +6,9 @@ using System.Xml.Serialization;
 
 namespace SoapCore.DocumentationWriter
 {
+	/// <summary>
+	/// Partial class containing methods for SOAP definition deserialization and documentation generation.
+	/// </summary>
 	public partial class SoapDefinition
 	{
 		private static XmlElementEventHandler _unknownElementHandler = (sender, args) =>
