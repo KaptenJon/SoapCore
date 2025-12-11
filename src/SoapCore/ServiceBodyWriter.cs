@@ -81,6 +81,7 @@ namespace SoapCore
 					block = ArrayPool<byte>.Shared.Rent(blockSize);
 				}
 			}
+
 			ArrayPool<byte>.Shared.Return(block);
 		}
 
@@ -208,7 +209,8 @@ namespace SoapCore
 								xElement.WriteTo(writer);
 								writer.WriteEndElement();
 							}
-							//https://github.com/DigDes/SoapCore/issues/385
+
+							// https://github.com/DigDes/SoapCore/issues/385
 							else if (_operation.DispatchMethod.GetCustomAttribute<XmlSerializerFormatAttribute>()?.Style == OperationFormatStyle.Rpc)
 							{
 								var importer = new SoapReflectionImporter(_serviceNamespace);
@@ -220,7 +222,8 @@ namespace SoapCore
 							else
 							{
 								var serializer = CachedXmlSerializer.GetXmlSerializer(resultType, xmlName, xmlNs);
-								//https://github.com/DigDes/SoapCore/issues/719
+
+								// https://github.com/DigDes/SoapCore/issues/719
 								serializer.Serialize(writer, _result);
 							}
 						}

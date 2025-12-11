@@ -12,8 +12,8 @@ namespace SoapCore.ServiceModel
 		public ServiceDescription(Type serviceType, bool generateSoapActionWithoutContractName)
 		{
 			ServiceType = serviceType;
-			//ServiceKnownTypes = serviceType.GetCustomAttributes<ServiceKnownTypeAttribute>(inherit: false);
 
+			//ServiceKnownTypes = serviceType.GetCustomAttributes<ServiceKnownTypeAttribute>(inherit: false);
 			ServiceKnownTypes = serviceType.Assembly.GetTypes()
 				.Where(t => t.Namespace == serviceType.Namespace)
 				.SelectMany(type => type.GetCustomAttributes<ServiceKnownTypeAttribute>(inherit: false))

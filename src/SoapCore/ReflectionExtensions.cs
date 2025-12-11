@@ -150,17 +150,6 @@ namespace SoapCore
 			return MembersWithAttributeCache<TAttribute>.CacheEntries.GetOrAdd(type, ComputeMembersWithAttribute<TAttribute>);
 		}
 
-		private static MemberWithAttribute<TAttribute>[] ComputeMembersWithAttribute<TAttribute>(Type type)
-			where TAttribute : Attribute
-		{
-			var res = from p in GetPropertyOrFieldMembers(type)
-					  let attr = p.GetCustomAttribute<TAttribute>()
-					  where attr != null
-					  select new MemberWithAttribute<TAttribute>(p, attr);
-
-			return res.ToArray();
-		}
-
 		internal static bool TryGetBaseTypeWithKnownTypes(this Type type, out Type result)
 		{
 			if (type is null)
@@ -195,6 +184,17 @@ namespace SoapCore
 				? baseType
 				: null;
 			return hasKnownTypes;
+		}
+
+		private static MemberWithAttribute<TAttribute>[] ComputeMembersWithAttribute<TAttribute>(Type type)
+			where TAttribute : Attribute
+		{
+			var res = from p in GetPropertyOrFieldMembers(type)
+					  let attr = p.GetCustomAttribute<TAttribute>()
+					  where attr != null
+					  select new MemberWithAttribute<TAttribute>(p, attr);
+
+			return res.ToArray();
 		}
 	}
 }

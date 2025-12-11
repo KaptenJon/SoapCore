@@ -114,8 +114,8 @@ namespace SoapCore.ServiceModel
 			{
 				if (serviceKnownType.Type == null && !string.IsNullOrEmpty(serviceKnownType.MethodName))
 				{
-					var method = serviceKnownType.DeclaringType.GetMethod(serviceKnownType.MethodName,BindingFlags.Public | BindingFlags.Static);
-					var types = (IEnumerable<Type>)method.Invoke(null, new object[]{method});
+					var method = serviceKnownType.DeclaringType.GetMethod(serviceKnownType.MethodName, BindingFlags.Public | BindingFlags.Static);
+					var types = (IEnumerable<Type>)method.Invoke(null, new object[] { method });
 					foreach (var t in types)
 					{
 						yield return new ServiceKnownTypeAttribute(t);
@@ -131,8 +131,8 @@ namespace SoapCore.ServiceModel
 			{
 				if (serviceKnownType.Type == null && !string.IsNullOrEmpty(serviceKnownType.MethodName))
 				{
-					var method = serviceKnownType.DeclaringType.GetMethod(serviceKnownType.MethodName,BindingFlags.Public | BindingFlags.Static);
-					var types = (IEnumerable<Type>)method.Invoke(null, new object[]{method});
+					var method = serviceKnownType.DeclaringType.GetMethod(serviceKnownType.MethodName, BindingFlags.Public | BindingFlags.Static);
+					var types = (IEnumerable<Type>)method.Invoke(null, new object[] { method });
 					foreach (var t in types)
 					{
 						yield return new ServiceKnownTypeAttribute(t);
@@ -150,7 +150,6 @@ namespace SoapCore.ServiceModel
 				yield return serviceKnownType;
 			}
 		}
-
 
 		private static SoapMethodParameterInfo CreateParameterInfo(ParameterInfo info, int index, ContractDescription contract)
 		{

@@ -13,9 +13,4 @@ namespace SoapCore
 		public string AppPath { get; set; }
 		public Func<WsdlFileOptions, HttpContext, string> UrlOverrideFunc { get; set; }
 	}
-
-	public class WsdlFileOptionsCaseInsensitive : WsdlFileOptions
-	{
-		public override Dictionary<string, WebServiceWSDLMapping> WebServiceWSDLMapping { get; set; } = new Dictionary<string, WebServiceWSDLMapping>(StringComparer.OrdinalIgnoreCase);
-	}
 }

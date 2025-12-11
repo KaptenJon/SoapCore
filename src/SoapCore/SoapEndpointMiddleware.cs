@@ -38,6 +38,8 @@ namespace SoapCore
 	public class SoapEndpointMiddleware<T_MESSAGE>
 		where T_MESSAGE : CustomMessage, new()
 	{
+		private static IOperationInvoker _operationInvoker;
+
 		private readonly ILogger<SoapEndpointMiddleware<T_MESSAGE>> _logger;
 		private readonly RequestDelegate _next;
 		private readonly SoapOptions _options;
@@ -45,8 +47,6 @@ namespace SoapCore
 		private readonly StringComparison _pathComparisonStrategy;
 		private readonly SoapMessageEncoder[] _messageEncoders;
 		private readonly IXmlSerializationHandler _serializerHandler;
-		private static IOperationInvoker _operationInvoker;
-
 		private readonly ConcurrentDictionary<string, ConcurrentXmlNamespaceLookup> _xmlNamespaceLookupsByMessageEncoder = new ConcurrentDictionary<string, ConcurrentXmlNamespaceLookup>();
 		public SoapEndpointMiddleware(ILogger<SoapEndpointMiddleware<T_MESSAGE>> logger, RequestDelegate next, SoapOptions options, IServiceProvider serviceProvider)
 		{

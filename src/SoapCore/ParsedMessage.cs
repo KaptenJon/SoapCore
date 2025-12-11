@@ -118,21 +118,6 @@ namespace SoapCore
 			return InternalGetReaderAtBodyContents();
 		}
 
-		private XmlDictionaryReader InternalGetReaderAtBodyContents()
-		{
-			var reader = new XDocumentXmlReader(_body);
-
-			XNamespace soapNs = _version.Envelope.Namespace();
-
-			reader.ReadToFollowing("Body", soapNs.ToString());
-
-			while (reader.Read() && reader.NodeType != XmlNodeType.Element && reader.NodeType != XmlNodeType.EndElement)
-			{
-			}
-
-			return XmlDictionaryReader.CreateDictionaryReader(reader);
-		}
-
 		protected override void OnClose()
 		{
 			_properties.Dispose();
@@ -188,7 +173,7 @@ namespace SoapCore
 				return (new XDocument(), true);
 			}
 
-			//return new XDocument(bodyNode.Elements().FirstOrDefault());
+			// return new XDocument(bodyNode.Elements().FirstOrDefault());
 			return (new XDocument(bodyNode), bodyNode.IsEmpty);
 		}
 
@@ -209,6 +194,21 @@ namespace SoapCore
 			}
 
 			return properties;
+		}
+
+		private XmlDictionaryReader InternalGetReaderAtBodyContents()
+		{
+			var reader = new XDocumentXmlReader(_body);
+
+			XNamespace soapNs = _version.Envelope.Namespace();
+
+			reader.ReadToFollowing("Body", soapNs.ToString());
+
+			while (reader.Read() && reader.NodeType != XmlNodeType.Element && reader.NodeType != XmlNodeType.EndElement)
+			{
+			}
+
+			return XmlDictionaryReader.CreateDictionaryReader(reader);
 		}
 
 		private void ResetMessageConsumed()

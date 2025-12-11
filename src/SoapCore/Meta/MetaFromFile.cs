@@ -57,18 +57,6 @@ namespace SoapCore.Meta
 		}
 #endif
 
-		private XmlAttribute EnsureAttribute(XmlDocument xmlDoc, XmlNode node, string attributeName)
-		{
-			var attribute = node.Attributes[attributeName];
-			if (attribute == null)
-			{
-				attribute = xmlDoc.CreateAttribute(attributeName);
-				node.Attributes.Append(attribute);
-			}
-
-			return attribute;
-		}
-
 		public string ModifyWSDLAddRightSchemaPath(string xmlString)
 		{
 			var xmlDoc = new XmlDocument() { XmlResolver = null };
@@ -147,6 +135,18 @@ namespace SoapCore.Meta
 			}
 
 			return xmlDoc.InnerXml;
+		}
+
+		private XmlAttribute EnsureAttribute(XmlDocument xmlDoc, XmlNode node, string attributeName)
+		{
+			var attribute = node.Attributes[attributeName];
+			if (attribute == null)
+			{
+				attribute = xmlDoc.CreateAttribute(attributeName);
+				node.Attributes.Append(attribute);
+			}
+
+			return attribute;
 		}
 
 		private string SchemaLocation()

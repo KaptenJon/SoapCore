@@ -22,6 +22,7 @@ namespace SoapCore
 		/// </summary>
 		public string Path { get; set; }
 #endif
+
 		/// <summary>
 		/// Gets or sets encoders
 		/// </summary>
@@ -118,11 +119,6 @@ namespace SoapCore
 		public WsdlFileOptions WsdlFileOptions { get; set; }
 
 		/// <summary>
-		/// Get or sets a value indicating the use of custom serializer, use for if multiple custom serializer used to services
-		/// </summary>
-		internal Type SerializerIdentifier { get; set; }
-
-		/// <summary>
 		/// Sets additional namespace declaration attributes in envelope
 		/// </summary>
 		public Dictionary<string, string> AdditionalEnvelopeXmlnsAttributes { get; set; }
@@ -147,6 +143,11 @@ namespace SoapCore
 		/// internal HTTP scheme is not the same as the external.
 		/// </summary>
 		public string SchemeOverride { get; set; }
+
+		/// <summary>
+		/// Get or sets a value indicating the use of custom serializer, use for if multiple custom serializer used to services
+		/// </summary>
+		internal Type SerializerIdentifier { get; set; }
 
 		public void UseCustomSerializer<TCustomSerializer>()
 			where TCustomSerializer : class, IXmlSerializationHandler
