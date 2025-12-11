@@ -13,7 +13,7 @@ namespace Net10Client
 
 			var binding = new BasicHttpBinding();
 			var endpoint = new EndpointAddress(new Uri($"http://{Environment.MachineName}:5060/Service.svc"));
-			var channelFactory = new ChannelFactory<ISampleService>(binding, endpoint);
+			using var channelFactory = new ChannelFactory<ISampleService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 
 			try
@@ -56,13 +56,6 @@ namespace Net10Client
 			catch (Exception ex)
 			{
 				Console.WriteLine("Error: {0}", ex.Message);
-			}
-			finally
-			{
-				if (serviceClient is IDisposable disposable)
-				{
-					disposable.Dispose();
-				}
 			}
 
 			Console.WriteLine("\nPress any key to exit...");
