@@ -68,6 +68,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+*.lutconfig
 
 # Chutzpah Test files
 _Chutzpah*
@@ -251,3 +252,4 @@ paket-files/
 .idea/
 *.sln.iml
 **/BenchmarkDotNet.Artifacts/
+
