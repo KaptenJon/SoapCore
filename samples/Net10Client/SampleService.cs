@@ -29,7 +29,7 @@ namespace Net10Server
 
 		public int[] IntArray()
 		{
-			return [123, 456, 789];
+			return new int[] { 123, 456, 789 };
 		}
 
 		public void VoidMethod(out string s)
@@ -49,15 +49,16 @@ namespace Net10Server
 
 		public void XmlMethod(XElement xml)
 		{
-			Console.WriteLine("NET 10 Server - XML: {0}", xml);
+			Console.WriteLine("NET 10 Server - XML: {0}", xml.ToString());
 		}
 
 		public ComplexReturnModel[] ComplexReturnModel()
 		{
-			return [
-                new ComplexReturnModel { Id = 1, Name = "NET 10 Item 1" },
+			return new ComplexReturnModel[]
+			{
+				new ComplexReturnModel { Id = 1, Name = "NET 10 Item 1" },
 				new ComplexReturnModel { Id = 2, Name = "NET 10 Item 2" }
-			];
+			};
 		}
 	}
 }
