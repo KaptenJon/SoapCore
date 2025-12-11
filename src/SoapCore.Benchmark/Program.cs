@@ -13,12 +13,13 @@ using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Logging;
 using BenchmarkDotNet.Jobs;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Hosting;
 
 namespace SoapCore.Benchmark
 {
 	[MemoryDiagnoser]
 	[SimpleJob(RuntimeMoniker.Net80, baseline: true, iterationCount: 20)]
-	//[SimpleJob(RuntimeMoniker.NetCoreApp31, iterationCount: 20)]
+	[SimpleJob(RuntimeMoniker.Net10_0, iterationCount: 20)]
 	public class EchoBench
 	{
 		// 0 measures overhead of creating host
@@ -33,10 +34,24 @@ namespace SoapCore.Benchmark
 ";
 		static TestServer CreateTestHost()
 		{
+#if NET10_0_OR_GREATER
+			var host = new HostBuilder()
+				.ConfigureWebHost(webBuilder =>
+				{
+					webBuilder
+						.UseTestServer()
+						.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Critical))
+						.UseStartup<Startup>();
+				})
+				.Build();
+			host.Start();
+			return host.GetTestServer();
+#else
 			var builder = WebHost.CreateDefaultBuilder()
 				.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Critical))
 				.UseStartup<Startup>();
 			return new TestServer(builder);
+#endif
 		}
 		TestServer m_Host;
 		[GlobalSetup]
