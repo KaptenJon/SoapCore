@@ -10,7 +10,7 @@ namespace SoapCore
 			where TAttribute : Attribute
 		{
 #pragma warning disable SA1401 // Fields should be private
-			internal static ConcurrentDictionary<Type, MemberWithAttribute<TAttribute>[]> CacheEntries = new ();
+			internal static readonly ConcurrentDictionary<Type, MemberWithAttribute<TAttribute>[]> CacheEntries = new ();
 #pragma warning restore SA1401
 		}
 	}
