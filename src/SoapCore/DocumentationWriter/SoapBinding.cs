@@ -4,8 +4,14 @@ using System.Xml.Serialization;
 
 namespace SoapCore.DocumentationWriter
 {
+	/// <summary>
+	/// Represents a SOAP service definition in WSDL format.
+	/// </summary>
 	public partial class SoapDefinition
 	{
+		/// <summary>
+		/// Represents a SOAP binding definition in a WSDL document.
+		/// </summary>
 		public class SoapBinding : IElementWithSpecialTransforms
 		{
 			private string _namespace;

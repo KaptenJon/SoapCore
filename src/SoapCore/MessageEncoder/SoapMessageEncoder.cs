@@ -184,11 +184,6 @@ namespace SoapCore.MessageEncoder
 				message.WriteMessage(xmlTextWriter);
 				xmlTextWriter.WriteEndDocument();
 				xmlTextWriter.Flush();
-
-				// using var xmlWriter = XmlDictionaryWriter.CreateDictionaryWriter(xmlTextWriter);
-				// message.WriteMessage(xmlWriter);
-				// xmlWriter.WriteEndDocument();
-				// xmlWriter.Flush();
 			}
 
 			//Set Content-length in Response
@@ -235,9 +230,10 @@ namespace SoapCore.MessageEncoder
 				xmlWriter.Flush();
 			}
 
-			if (httpContext != null) // HttpContext is null in unit tests
+			// Set Content-Length in response. This will disable chunked transfer-encoding.
+			// Note: HttpContext is null in unit tests
+			if (httpContext != null)
 			{
-				// Set Content-Length in response. This will disable chunked transfer-encoding.
 				httpContext.Response.ContentLength = memoryStream.Length;
 			}
 

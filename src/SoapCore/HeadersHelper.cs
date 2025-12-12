@@ -145,8 +145,7 @@ namespace SoapCore
 				}
 #endif
 
-				if (soapAction != null &&
-				    (GetTrimmedSoapAction(soapAction).Length == 0 || GetTrimmedClearedSoapAction(soapAction).Length == 0))
+				if (GetTrimmedSoapAction(soapAction).Length == 0 || GetTrimmedClearedSoapAction(soapAction).Length == 0)
 				{
 					soapAction = ReadOnlySpan<char>.Empty;
 				}
@@ -171,7 +170,9 @@ namespace SoapCore
 
 				if (soapAction.IsEmpty)
 				{
-					XmlDictionaryReader reader = null;
+#nullable enable
+					XmlDictionaryReader? reader = null;
+#nullable restore
 					if (!message.IsEmpty)
 					{
 						MessageBuffer mb = message.CreateBufferedCopy(int.MaxValue);
@@ -181,6 +182,8 @@ namespace SoapCore
 						reader = responseMsg.GetReaderAtBodyContents();
 						soapAction = reader.LocalName.AsSpan();
 					}
+
+					reader?.Dispose();
 				}
 			}
 
