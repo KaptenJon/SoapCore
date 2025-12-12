@@ -1,6 +1,4 @@
 using Models;
-using System;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Net10Client
@@ -49,7 +47,7 @@ namespace Net10Client
 
 		public void XmlMethod(XElement xml)
 		{
-			Console.WriteLine("NET 10 Server - XML: {0}", xml.ToString());
+			Console.WriteLine("NET 10 Server - XML: {0}", xml);
 		}
 
 		public ComplexReturnModel[] ComplexReturnModel()
