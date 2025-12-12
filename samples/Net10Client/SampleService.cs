@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Net10Server
+namespace Net10Client
 {
 	public class SampleService : ISampleService
 	{
