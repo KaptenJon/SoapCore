@@ -3,7 +3,6 @@ using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
-using System.Reflection;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading;
@@ -206,6 +205,7 @@ namespace SoapCore
 
 			while (reader.Read() && reader.NodeType != XmlNodeType.Element && reader.NodeType != XmlNodeType.EndElement)
 			{
+				// Read document until next element.
 			}
 
 			return XmlDictionaryReader.CreateDictionaryReader(reader);
