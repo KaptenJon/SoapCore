@@ -52,7 +52,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="System.Formats.Asn1" Version="10.0.*" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
 	</ItemGroup>
 
 	<ItemGroup>
