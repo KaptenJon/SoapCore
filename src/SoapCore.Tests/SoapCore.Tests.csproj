@@ -21,42 +21,38 @@
 		<AdditionalFiles Include="stylecop.json" />
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework) == 'net8.0'">
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.13" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.*" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.*" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.*" />
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework) == 'net10.0'">
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.*" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.*" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
+
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.*">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="DeepEqual.SuperJMN" Version="2.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-		<PackageReference Include="MSTest.TestAdapter" Version="3.8.2" />
-		<PackageReference Include="MSTest.TestFramework" Version="3.8.2" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.*" />
+		<PackageReference Include="MSTest.TestAdapter" Version="3.8.*" />
+		<PackageReference Include="MSTest.TestFramework" Version="3.8.*" />
+		<PackageReference Include="StyleCop.Analyzers" Version="1.1.*">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Moq" Version="4.20.72" />
-		<PackageReference Include="Shouldly" Version="4.3.0" />
-		<PackageReference Include="xunit" Version="2.9.3" />
-		<PackageReference Include="xunit.runner.console" Version="2.9.3">
+		<PackageReference Include="Moq" Version="4.20.*" />
+		<PackageReference Include="Shouldly" Version="4.3.*" />
+		<PackageReference Include="xunit" Version="2.9.*" />
+		<PackageReference Include="xunit.runner.console" Version="2.9.*">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="System.Formats.Asn1" Version="10.0.0" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.0" />
+		<PackageReference Include="System.Formats.Asn1" Version="10.0.*" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -113,5 +109,9 @@
 		<None Update="WsdlFromFile\WSDL\echoIncluded.xsd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.39" />
 	</ItemGroup>
 </Project>
