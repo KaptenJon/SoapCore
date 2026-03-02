@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
@@ -17,28 +19,56 @@ namespace SoapCore.Tests.NativeAuthenticationAndAuthorization
 	[TestClass]
 	public class NativeAuthenticationAndAuthorizationTests
 	{
+		private static IWebHost _host;
+
 		[ClassInitialize]
 #pragma warning disable IDE0060 // Remove unused parameter
 		public static void StartServer(TestContext context)
 #pragma warning restore IDE0060 // Remove unused parameter
 		{
-			Task.Run(() =>
+			_host = new WebHostBuilder()
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>()
+				.Build();
+
+			var task = _host.RunAsync();
+
+			while (true)
 			{
-				var host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://localhost:5054")
-					.UseStartup<Startup>()
-					.Build();
-				host.Run();
-			}).Wait(1000);
+				if (_host != null)
+				{
+					if (task.IsFaulted && task.Exception != null)
+					{
+						throw task.Exception;
+					}
+
+					if (!task.IsCompleted || !task.IsCanceled)
+					{
+						if (!_host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
+						{
+							break;
+						}
+					}
+				}
+
+				Thread.Sleep(2000);
+			}
+		}
+
+		[ClassCleanup]
+		public static async Task StopServer()
+		{
+			await _host.StopAsync();
 		}
 
 		public ITestService CreateClient(string authorizationHeaderValue = null)
 		{
-			string address = string.Format("http://{0}:5054/Service.svc", "localhost");
+			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
+			var address = addresses.Addresses.Single();
 
 			var binding = new BasicHttpBinding();
-			var endpoint = new EndpointAddress(new Uri(address));
+			var endpoint = new EndpointAddress(new Uri(string.Format("{0}/Service.svc", address)));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 
 			if (!string.IsNullOrWhiteSpace(authorizationHeaderValue))

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
 
@@ -11,26 +14,56 @@ namespace SoapCore.Tests.ActionFilter
 	[TestClass]
 	public class ActionFilterTests
 	{
+		private static IWebHost _host;
+
 		[ClassInitialize]
 #pragma warning disable IDE0060 // Remove unused parameter
 		public static void StartServer(TestContext context)
 #pragma warning restore IDE0060 // Remove unused parameter
 		{
-			Task.Run(() =>
+			_host = new WebHostBuilder()
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>()
+				.Build();
+
+			var task = _host.RunAsync();
+
+			while (true)
 			{
-				var host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://localhost:5052")
-					.UseStartup<Startup>()
-					.Build();
-				host.Run();
-			}).Wait(1000);
+				if (_host != null)
+				{
+					if (task.IsFaulted && task.Exception != null)
+					{
+						throw task.Exception;
+					}
+
+					if (!task.IsCompleted || !task.IsCanceled)
+					{
+						if (!_host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
+						{
+							break;
+						}
+					}
+				}
+
+				Thread.Sleep(2000);
+			}
+		}
+
+		[ClassCleanup]
+		public static async Task StopServer()
+		{
+			await _host.StopAsync();
 		}
 
 		public ITestService CreateClient()
 		{
+			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
+			var address = addresses.Addresses.Single();
+
 			var binding = new BasicHttpBinding();
-			var endpoint = new EndpointAddress(new Uri(string.Format("http://{0}:5052/Service.svc", "localhost")));
+			var endpoint = new EndpointAddress(new Uri(string.Format("{0}/Service.svc", address)));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;
