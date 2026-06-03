@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
-using System.Threading;
 using System.Xml;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.RequestArgumentsOrder
 {
@@ -17,7 +17,7 @@ namespace SoapCore.Tests.RequestArgumentsOrder
 		where TOriginalParametersOrderService : class
 		where TReversedParametersOrderService : class
 	{
-		private readonly IWebHost _host;
+		private readonly IHost _host;
 		private readonly Dictionary<SoapSerializer, TOriginalParametersOrderService> _originalRequestArgumentsOrderClients;
 		private readonly Dictionary<SoapSerializer, TReversedParametersOrderService> _reversedRequestArgumentsOrderClients;
 
@@ -30,7 +30,7 @@ namespace SoapCore.Tests.RequestArgumentsOrder
 			};
 
 			// start service host
-			_host = new WebHostBuilder()
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
 				.ConfigureServices(services =>
 				{
 					// init service mock
@@ -41,11 +41,6 @@ namespace SoapCore.Tests.RequestArgumentsOrder
 				})
 				.Configure(appBuilder =>
 				{
-#if !NETCOREAPP3_0_OR_GREATER
-					appBuilder.UseSoapEndpoint<TOriginalParametersOrderService>("/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer);
-					appBuilder.UseSoapEndpoint<TOriginalParametersOrderService>("/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer);
-					appBuilder.UseMvc();
-#else
 					appBuilder.UseRouting();
 
 					appBuilder.UseEndpoints(x =>
@@ -53,38 +48,12 @@ namespace SoapCore.Tests.RequestArgumentsOrder
 						x.UseSoapEndpoint<TOriginalParametersOrderService>("/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer);
 						x.UseSoapEndpoint<TOriginalParametersOrderService>("/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer);
 					});
-#endif
 				})
 				.UseKestrel()
 				.UseUrls($"http://127.0.0.1:0")
-				.UseContentRoot(Directory.GetCurrentDirectory())
-				.Build();
+				.UseContentRoot(Directory.GetCurrentDirectory()));
 
-			var task = _host.RunAsync();
-
-			while (true)
-			{
-				if (_host != null)
-				{
-					if (task.IsFaulted && task.Exception != null)
-					{
-						throw task.Exception;
-					}
-
-					if (!task.IsCompleted || !task.IsCanceled)
-					{
-						if (!_host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
-						{
-							break;
-						}
-					}
-				}
-
-				Thread.Sleep(2000);
-			}
-
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			//make clients
 			_originalRequestArgumentsOrderClients = InitClients<TOriginalParametersOrderService>(binding, address);
@@ -113,7 +82,7 @@ namespace SoapCore.Tests.RequestArgumentsOrder
 
 		public void Dispose()
 		{
-			_host.StopAsync();
+			_host.StopAsync().GetAwaiter().GetResult();
 			_host.Dispose();
 		}
 

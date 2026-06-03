@@ -4,10 +4,12 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using SoapCore.Tests.Model;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.Wsdl
 {
@@ -17,10 +19,13 @@ namespace SoapCore.Tests.Wsdl
 
 		private readonly string _schemeOverride;
 
-		public Startup(IStartupConfiguration configuration)
+		public Startup(IConfiguration configuration)
 		{
-			_serviceType = configuration.ServiceType;
-			_schemeOverride = configuration.SchemeOverride;
+			var startupConfigurationKey = configuration[TestHostFactory.StartupConfigurationKeySetting];
+			var startupConfiguration = TestHostFactory.GetStartupConfiguration<IStartupConfiguration>(startupConfigurationKey);
+
+			_serviceType = startupConfiguration.ServiceType;
+			_schemeOverride = startupConfiguration.SchemeOverride;
 		}
 
 		public void ConfigureServices(IServiceCollection services)
@@ -30,15 +35,6 @@ namespace SoapCore.Tests.Wsdl
 			services.AddMvc();
 		}
 
-#if !NETCOREAPP3_0_OR_GREATER
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-		{
-			app.UseSoapEndpoint(_serviceType, "/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer, schemeOverride: _schemeOverride);
-			app.UseSoapEndpoint(_serviceType, "/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer, schemeOverride: _schemeOverride);
-
-			app.UseMvc();
-		}
-#else
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
 		{
 			app.UseRouting();
@@ -49,6 +45,5 @@ namespace SoapCore.Tests.Wsdl
 				x.UseSoapEndpoint(_serviceType, "/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer, schemeOverride: _schemeOverride);
 			});
 		}
-#endif
 	}
 }

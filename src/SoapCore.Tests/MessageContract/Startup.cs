@@ -5,10 +5,12 @@ using System.ServiceModel.Channels;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using SoapCore.Tests.MessageContract.Models;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.MessageContract
 {
@@ -16,9 +18,12 @@ namespace SoapCore.Tests.MessageContract
 	{
 		private readonly Type _serviceType;
 
-		public Startup(IStartupConfiguration configuration)
+		public Startup(IConfiguration configuration)
 		{
-			_serviceType = configuration.ServiceType;
+			var startupConfigurationKey = configuration[TestHostFactory.StartupConfigurationKeySetting];
+			var startupConfiguration = TestHostFactory.GetStartupConfiguration<IStartupConfiguration>(startupConfigurationKey);
+
+			_serviceType = startupConfiguration.ServiceType;
 		}
 
 		public void ConfigureServices(IServiceCollection services)
@@ -28,15 +33,6 @@ namespace SoapCore.Tests.MessageContract
 			services.AddMvc();
 		}
 
-#if !NETCOREAPP3_0_OR_GREATER
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-		{
-			app.UseSoapEndpoint(_serviceType, "/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer);
-			app.UseSoapEndpoint(_serviceType, "/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer);
-
-			app.UseMvc();
-		}
-#else
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
 		{
 			app.UseRouting();
@@ -82,6 +78,5 @@ namespace SoapCore.Tests.MessageContract
 				});
 			});
 		}
-#endif
 	}
 }

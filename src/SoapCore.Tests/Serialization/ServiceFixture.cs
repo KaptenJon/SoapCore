@@ -4,20 +4,20 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.ServiceModel;
-using System.Threading;
 using System.Xml;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.Serialization
 {
 	public sealed class ServiceFixture<TService> : IDisposable
 		where TService : class
 	{
-		private readonly IWebHost _host;
+		private readonly IHost _host;
 		private readonly Dictionary<SoapSerializer, TService> _sampleServiceClients = new Dictionary<SoapSerializer, TService>();
 
 		public ServiceFixture()
@@ -29,7 +29,7 @@ namespace SoapCore.Tests.Serialization
 			};
 
 			// start service host
-			_host = new WebHostBuilder()
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
 				.ConfigureServices(services =>
 				{
 					// init SampleService service mock
@@ -40,11 +40,6 @@ namespace SoapCore.Tests.Serialization
 				})
 				.Configure(appBuilder =>
 				{
-#if !NETCOREAPP3_0_OR_GREATER
-					appBuilder.UseSoapEndpoint<TService>("/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer);
-					appBuilder.UseSoapEndpoint<TService>("/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer);
-					appBuilder.UseMvc();
-#else
 					appBuilder.UseRouting();
 
 					appBuilder.UseEndpoints(x =>
@@ -52,38 +47,12 @@ namespace SoapCore.Tests.Serialization
 						x.UseSoapEndpoint<TService>("/Service.svc", new SoapEncoderOptions(), SoapSerializer.DataContractSerializer);
 						x.UseSoapEndpoint<TService>("/Service.asmx", new SoapEncoderOptions(), SoapSerializer.XmlSerializer);
 					});
-#endif
 				})
 				.UseKestrel()
 				.UseUrls($"http://127.0.0.1:0")
-				.UseContentRoot(Directory.GetCurrentDirectory())
-				.Build();
+				.UseContentRoot(Directory.GetCurrentDirectory()));
 
-			var task = _host.RunAsync();
-
-			while (true)
-			{
-				if (_host != null)
-				{
-					if (task.IsFaulted && task.Exception != null)
-					{
-						throw task.Exception;
-					}
-
-					if (!task.IsCompleted || !task.IsCanceled)
-					{
-						if (!_host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
-						{
-							break;
-						}
-					}
-				}
-
-				Thread.Sleep(2000);
-			}
-
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			//make service client
 			var endpointXml = new EndpointAddress(new Uri($"{address}/Service.asmx"));
@@ -115,7 +84,7 @@ namespace SoapCore.Tests.Serialization
 
 		public void Dispose()
 		{
-			_host.StopAsync();
+			_host.StopAsync().GetAwaiter().GetResult();
 			_host.Dispose();
 		}
 	}
