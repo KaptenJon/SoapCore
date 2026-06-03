@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
 using SoapCore.Tests.Utilities;
@@ -15,19 +16,29 @@ namespace SoapCore.Tests
 	[TestClass]
 	public class IntegrationTests
 	{
+		private static IHost _host;
+		private static string _hostAddress;
+
 		[ClassInitialize]
 		public static void StartServer(TestContext testContext)
 		{
-			Task.Run(() =>
-			{
-				var host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://localhost:5050")
-					.UseStartup<Startup>()
-					.Build();
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>());
+			_hostAddress = _host.GetServerAddress();
+		}
 
-				host.Run();
-			}).Wait(1000);
+		[ClassCleanup]
+		public static async Task StopServer()
+		{
+			if (_host != null)
+			{
+				await _host.StopAsync();
+				_host.Dispose();
+				_host = null;
+				_hostAddress = null;
+			}
 		}
 
 		[TestMethod]
@@ -362,8 +373,7 @@ namespace SoapCore.Tests
 		private ITestService CreateClient(bool caseInsensitivePath = false)
 		{
 			var binding = new BasicHttpBinding();
-			var endpoint = new EndpointAddress(new Uri(
-				string.Format("http://{0}:5050/{1}.svc", "localhost", caseInsensitivePath ? "serviceci" : "Service")));
+			var endpoint = new EndpointAddress(new Uri($"{_hostAddress}/{(caseInsensitivePath ? "serviceci" : "Service")}.svc"));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;
@@ -372,8 +382,7 @@ namespace SoapCore.Tests
 		private ITestService CreateClientASMX(bool caseInsensitivePath = false)
 		{
 			var binding = new BasicHttpBinding();
-			var endpoint = new EndpointAddress(new Uri(
-				string.Format("http://{0}:5050/{1}.asmx", "localhost", caseInsensitivePath ? "serviceci" : "Service")));
+			var endpoint = new EndpointAddress(new Uri($"{_hostAddress}/{(caseInsensitivePath ? "serviceci" : "Service")}.asmx"));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;
@@ -384,7 +393,7 @@ namespace SoapCore.Tests
 			var transport = new HttpTransportBindingElement();
 			var textencoding = new TextMessageEncodingBindingElement(MessageVersion.Soap12WSAddressing10, Encoding.UTF8);
 			var binding = new CustomBinding(textencoding, transport);
-			var endpoint = new EndpointAddress(new Uri(string.Format("http://{0}:5050/Service.svc", "localhost")));
+			var endpoint = new EndpointAddress(new Uri($"{_hostAddress}/Service.svc"));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;
@@ -395,7 +404,7 @@ namespace SoapCore.Tests
 			var transport = new HttpTransportBindingElement();
 			var textencoding = new CustomTextMessageBindingElement("iso-8859-1", "text/xml", MessageVersion.Soap11);
 			var binding = new CustomBinding(textencoding, transport);
-			var endpoint = new EndpointAddress(new Uri(string.Format("http://{0}:5050/WSA11ISO88591Service.svc", "localhost")));
+			var endpoint = new EndpointAddress(new Uri($"{_hostAddress}/WSA11ISO88591Service.svc"));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;

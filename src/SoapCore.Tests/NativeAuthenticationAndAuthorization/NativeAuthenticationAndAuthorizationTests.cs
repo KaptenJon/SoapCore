@@ -8,34 +8,47 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.NativeAuthenticationAndAuthorization
 {
 	[TestClass]
 	public class NativeAuthenticationAndAuthorizationTests
 	{
+		private static IHost _host;
+		private static string _hostAddress;
+
 		[ClassInitialize]
 #pragma warning disable IDE0060 // Remove unused parameter
 		public static void StartServer(TestContext context)
 #pragma warning restore IDE0060 // Remove unused parameter
 		{
-			Task.Run(() =>
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>());
+			_hostAddress = _host.GetServerAddress();
+		}
+
+		[ClassCleanup]
+		public static async Task StopServer()
+		{
+			if (_host != null)
 			{
-				var host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://localhost:5054")
-					.UseStartup<Startup>()
-					.Build();
-				host.Run();
-			}).Wait(1000);
+				await _host.StopAsync();
+				_host.Dispose();
+				_host = null;
+				_hostAddress = null;
+			}
 		}
 
 		public ITestService CreateClient(string authorizationHeaderValue = null)
 		{
-			string address = string.Format("http://{0}:5054/Service.svc", "localhost");
+			string address = $"{_hostAddress}/Service.svc";
 
 			var binding = new BasicHttpBinding();
 			var endpoint = new EndpointAddress(new Uri(address));

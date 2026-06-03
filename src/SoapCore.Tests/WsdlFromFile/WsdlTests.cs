@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 using SoapCore.Tests.WsdlFromFile.Services;
 
 namespace SoapCore.Tests.WsdlFromFile
@@ -19,7 +19,7 @@ namespace SoapCore.Tests.WsdlFromFile
 	[TestClass]
 	public class WsdlTests
 	{
-		private IWebHost _host;
+		private IHost _host;
 
 		[TestMethod]
 		public void CheckWSDLExists()
@@ -60,6 +60,7 @@ namespace SoapCore.Tests.WsdlFromFile
 		{
 			StartService(typeof(MeasurementSiteTablePublicationService));
 			var wsdl = GetWsdlFromAsmx();
+			var address = _host.GetServerAddress();
 			StopServer();
 
 			var root = new XmlDocument();
@@ -72,9 +73,6 @@ namespace SoapCore.Tests.WsdlFromFile
 
 			var element = root.SelectSingleNode("/wsdl:definitions/wsdl:service/wsdl:port/soapbind:address", nsmgr);
 
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
-
 			string url = address + "/Management/Service.asmx";
 			Assert.IsNotNull(element);
 			Assert.AreEqual(element.Attributes["location"]?.Value, url);
@@ -85,6 +83,7 @@ namespace SoapCore.Tests.WsdlFromFile
 		{
 			StartService(typeof(MeasurementSiteTablePublicationService));
 			var wsdl = GetWsdlFromAsmx();
+			var address = _host.GetServerAddress();
 			StopServer();
 
 			var root = new XmlDocument();
@@ -97,9 +96,6 @@ namespace SoapCore.Tests.WsdlFromFile
 
 			var element = root.SelectSingleNode("/wsdl:definitions/wsdl:types/xs:schema/xs:import[1]", nsmgr);
 			var importWithoutSchemaLocation = root.SelectSingleNode("/wsdl:definitions/wsdl:types/xs:schema/xs:import[3]", nsmgr);
-
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
 
 			string url = address + "/Management/Service.asmx?xsd&name=DATEXII_3_MessageContainer.xsd";
 
@@ -114,7 +110,12 @@ namespace SoapCore.Tests.WsdlFromFile
 		[TestCleanup]
 		public void StopServer()
 		{
-			_host?.StopAsync();
+			if (_host != null)
+			{
+				_host.StopAsync().GetAwaiter().GetResult();
+				_host.Dispose();
+				_host = null;
+			}
 		}
 
 		private string GetWsdl()
@@ -126,8 +127,7 @@ namespace SoapCore.Tests.WsdlFromFile
 
 		private string GetWsdlFromService(string serviceName)
 		{
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			using (var httpClient = new HttpClient())
 			{
@@ -139,8 +139,7 @@ namespace SoapCore.Tests.WsdlFromFile
 		{
 			var serviceName = "Service.asmx";
 
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			using (var httpClient = new HttpClient())
 			{
@@ -152,8 +151,7 @@ namespace SoapCore.Tests.WsdlFromFile
 		{
 			var serviceName = "Service.asmx";
 
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			using (var httpClient = new HttpClient())
 			{
@@ -163,23 +161,13 @@ namespace SoapCore.Tests.WsdlFromFile
 
 		private void StartService(Type serviceType)
 		{
-			_host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://127.0.0.1:0")
-					.ConfigureServices(services => services.AddSingleton<IStartupConfiguration>(new StartupConfiguration("Service", serviceType, "WSDL", "SnapshotPull.wsdl")))
-					.UseStartup<Startup>()
-					.Build();
+			var configurationKey = TestHostFactory.RegisterStartupConfiguration(new StartupConfiguration("Service", serviceType, "WSDL", "SnapshotPull.wsdl"));
 
-			_ = _host.RunAsync();
-
-			//Don't think this is true anymore and can't reproduce the behaviour locally if I remove the code below but not confident enough to remove it...
-			//
-			//There's a race condition without this check, the host may not have an address immediately and we need to wait for it but the collection
-			//may actually be totally empty, All() will be true if the collection is empty.
-			while (_host == null || _host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.All(a => a.EndsWith(":0")))
-			{
-				Thread.Sleep(2000);
-			}
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseSetting(TestHostFactory.StartupConfigurationKeySetting, configurationKey)
+				.UseStartup<Startup>());
 		}
 
 		private List<XElement> GetElements(XElement root, XName name)

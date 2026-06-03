@@ -7,19 +7,19 @@ using System.Net;
 using System.Net.Http;
 using System.ServiceModel.Channels;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using SoapCore.MessageEncoder;
 using SoapCore.Meta;
 using SoapCore.ServiceModel;
+using SoapCore.Tests.Utilities;
 using SoapCore.Tests.Wsdl.Services;
 
 namespace SoapCore.Tests.Wsdl
@@ -31,7 +31,7 @@ namespace SoapCore.Tests.Wsdl
 		private readonly XNamespace _wsdlSchema = "http://schemas.xmlsoap.org/wsdl/";
 		private readonly XNamespace _soapSchema = "http://schemas.xmlsoap.org/wsdl/soap/";
 
-		private IWebHost _host;
+		private IHost _host;
 
 		[DataTestMethod]
 		[DataRow(SoapSerializer.XmlSerializer)]
@@ -1495,8 +1495,7 @@ namespace SoapCore.Tests.Wsdl
 
 		private string GetWsdlFromService(string serviceName)
 		{
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			using (var httpClient = new HttpClient())
 			{
@@ -1508,8 +1507,7 @@ namespace SoapCore.Tests.Wsdl
 		{
 			var serviceName = "Service.asmx";
 
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			using (var httpClient = new HttpClient())
 			{
@@ -1550,23 +1548,13 @@ namespace SoapCore.Tests.Wsdl
 
 		private void StartService(Type serviceType, string schemeOverride = null)
 		{
-			_host = new WebHostBuilder()
+			var configurationKey = TestHostFactory.RegisterStartupConfiguration(new StartupConfiguration(serviceType, schemeOverride));
+
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
 				.UseKestrel()
 				.UseUrls("http://127.0.0.1:0")
-				.ConfigureServices(services => services.AddSingleton<IStartupConfiguration>(new StartupConfiguration(serviceType, schemeOverride)))
-				.UseStartup<Startup>()
-				.Build();
-
-			_ = _host.RunAsync();
-
-			//Don't think this is true anymore and can't reproduce the behaviour locally if I remove the code below but not confident enough to remove it...
-			//
-			//There's a race condition without this check, the host may not have an address immediately and we need to wait for it but the collection
-			//may actually be totally empty, All() will be true if the collection is empty.
-			while (_host == null || _host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.All(a => a.EndsWith(":0")))
-			{
-				Thread.Sleep(2000);
-			}
+				.UseSetting(TestHostFactory.StartupConfigurationKeySetting, configurationKey)
+				.UseStartup<Startup>());
 		}
 
 		private List<XElement> GetElements(XElement root, XName name)

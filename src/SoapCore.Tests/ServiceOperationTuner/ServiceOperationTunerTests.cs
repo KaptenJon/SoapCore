@@ -1,56 +1,35 @@
 using System;
-using System.Linq;
 using System.ServiceModel;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.ServiceOperationTuner
 {
 	[TestClass]
 	public class ServiceOperationTunerTests
 	{
-		private static IWebHost _host;
+		private static IHost _host;
 
 		[ClassInitialize]
 		public static void StartServer(TestContext testContext)
 		{
-			_host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://127.0.0.1:0")
-					.UseStartup<Startup>()
-					.Build();
-
-			var task = _host.RunAsync();
-
-			while (true)
-			{
-				if (_host != null)
-				{
-					if (task.IsFaulted && task.Exception != null)
-					{
-						throw task.Exception;
-					}
-
-					if (!task.IsCompleted || !task.IsCanceled)
-					{
-						if (!_host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
-						{
-							break;
-						}
-					}
-				}
-
-				Thread.Sleep(2000);
-			}
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>());
 		}
 
 		[ClassCleanup]
 		public static async Task StopServer()
 		{
-			await _host.StopAsync();
+			if (_host != null)
+			{
+				await _host.StopAsync();
+				_host.Dispose();
+			}
 		}
 
 		[TestInitialize]
@@ -61,8 +40,7 @@ namespace SoapCore.Tests.ServiceOperationTuner
 
 		public ITestService CreateClient(string pingValue)
 		{
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			var binding = new BasicHttpBinding();
 			var endpoint = new EndpointAddress(new Uri(string.Format("{0}/Service.svc", address)));

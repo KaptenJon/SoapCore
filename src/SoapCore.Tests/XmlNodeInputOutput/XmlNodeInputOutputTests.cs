@@ -2,9 +2,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.XmlNodeInputOutput
 {
@@ -68,11 +67,9 @@ namespace SoapCore.Tests.XmlNodeInputOutput
 			}
 		}
 
-		private TestServer CreateTestHost()
+		private TestServerHost CreateTestHost()
 		{
-			var webHostBuilder = new WebHostBuilder()
-				.UseStartup<Startup>();
-			return new TestServer(webHostBuilder);
+			return TestHostFactory.CreateTestServer<Startup>();
 		}
 	}
 }

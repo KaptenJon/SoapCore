@@ -1,8 +1,7 @@
 using System;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
 using System.Threading;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using System.Net.Http;
 using System.Net;
@@ -11,6 +10,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using BenchmarkDotNet.Jobs;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -31,14 +31,19 @@ namespace SoapCore.Benchmark
   </soap:Body>
 </soap:Envelope>
 ";
-		static TestServer CreateTestHost()
+		static IHost CreateTestHost()
 		{
-			var builder = WebHost.CreateDefaultBuilder()
+			return new HostBuilder()
 				.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Critical))
-				.UseStartup<Startup>();
-			return new TestServer(builder);
+				.ConfigureWebHost(webBuilder =>
+				{
+					webBuilder
+						.UseTestServer()
+						.UseStartup<Startup>();
+				})
+				.Start();
 		}
-		TestServer m_Host;
+		IHost m_Host;
 		[GlobalSetup]
 		public void Setup()
 		{
@@ -55,7 +60,7 @@ namespace SoapCore.Benchmark
 			for (int i = 0; i < LoopNum; i++)
 			{
 				using var content = new StringContent(EchoContent, Encoding.UTF8, "text/xml");
-				using var res = await m_Host.CreateRequest("/")
+				using var res = await m_Host.GetTestServer().CreateRequest("/")
 					.AddHeader("SOAPAction", "http://example.org/PingService/Echo")
 					.And(msg =>
 					{
@@ -70,7 +75,7 @@ namespace SoapCore.Benchmark
 			for (int i = 0; i < LoopNum; i++)
 			{
 				using var content = new StringContent(EchoContent, Encoding.UTF8, "text/xml");
-				using var res = await m_Host.CreateRequest("/TestService.asmx")
+				using var res = await m_Host.GetTestServer().CreateRequest("/TestService.asmx")
 					.AddHeader("SOAPAction", "http://example.org/PingService/Echo")
 					.And(msg =>
 					{

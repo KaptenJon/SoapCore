@@ -5,9 +5,8 @@ using System.Net.Http;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.SoapMessageProcessor
 {
@@ -87,11 +86,9 @@ namespace SoapCore.Tests.SoapMessageProcessor
 			}
 		}
 
-		private TestServer CreateTestHost()
+		private TestServerHost CreateTestHost()
 		{
-			var webHostBuilder = new WebHostBuilder()
-				.UseStartup<Startup>();
-			return new TestServer(webHostBuilder);
+			return TestHostFactory.CreateTestServer<Startup>();
 		}
 	}
 }

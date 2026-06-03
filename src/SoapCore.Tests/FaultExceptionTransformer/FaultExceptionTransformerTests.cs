@@ -11,15 +11,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.FaultExceptionTransformer
 {
 	[TestClass]
 	public class FaultExceptionTransformerTests : DelegatingHandler, IEndpointBehavior
 	{
-		private static IWebHost _host;
+		private static IHost _host;
 
 #if !NETFRAMEWORK
 		private bool _hasAssertHttpResponse;
@@ -28,30 +29,25 @@ namespace SoapCore.Tests.FaultExceptionTransformer
 		[ClassInitialize]
 		public static void StartServer(TestContext testContext)
 		{
-			_host = new WebHostBuilder()
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
 				.UseKestrel()
 				.UseUrls("http://127.0.0.1:0")
-				.UseStartup<Startup>()
-				.Build();
-
-			_host.RunAsync();
-
-			while (_host == null || _host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First().EndsWith(":0"))
-			{
-				Thread.Sleep(2000);
-			}
+				.UseStartup<Startup>());
 		}
 
 		[ClassCleanup]
 		public static async Task StopServer()
 		{
-			await _host.StopAsync();
+			if (_host != null)
+			{
+				await _host.StopAsync();
+				_host.Dispose();
+			}
 		}
 
 		public ITestService CreateClient()
 		{
-			var addresses = _host.ServerFeatures.Get<IServerAddressesFeature>();
-			var address = addresses.Addresses.Single();
+			var address = _host.GetServerAddress();
 
 			var binding = new BasicHttpBinding();
 

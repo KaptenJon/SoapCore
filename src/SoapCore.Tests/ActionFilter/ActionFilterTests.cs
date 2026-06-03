@@ -3,34 +3,47 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.ActionFilter
 {
 	[TestClass]
 	public class ActionFilterTests
 	{
+		private static IHost _host;
+		private static string _hostAddress;
+
 		[ClassInitialize]
 #pragma warning disable IDE0060 // Remove unused parameter
 		public static void StartServer(TestContext context)
 #pragma warning restore IDE0060 // Remove unused parameter
 		{
-			Task.Run(() =>
+			_host = TestHostFactory.StartKestrel(webBuilder => webBuilder
+				.UseKestrel()
+				.UseUrls("http://127.0.0.1:0")
+				.UseStartup<Startup>());
+			_hostAddress = _host.GetServerAddress();
+		}
+
+		[ClassCleanup]
+		public static async Task StopServer()
+		{
+			if (_host != null)
 			{
-				var host = new WebHostBuilder()
-					.UseKestrel()
-					.UseUrls("http://localhost:5052")
-					.UseStartup<Startup>()
-					.Build();
-				host.Run();
-			}).Wait(1000);
+				await _host.StopAsync();
+				_host.Dispose();
+				_host = null;
+				_hostAddress = null;
+			}
 		}
 
 		public ITestService CreateClient()
 		{
 			var binding = new BasicHttpBinding();
-			var endpoint = new EndpointAddress(new Uri(string.Format("http://{0}:5052/Service.svc", "localhost")));
+			var endpoint = new EndpointAddress(new Uri($"{_hostAddress}/Service.svc"));
 			var channelFactory = new ChannelFactory<ITestService>(binding, endpoint);
 			var serviceClient = channelFactory.CreateChannel();
 			return serviceClient;

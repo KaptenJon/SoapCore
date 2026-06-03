@@ -4,22 +4,26 @@ using System.Net.Http;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.MessageFilter
 {
 	[TestClass]
 	public class RawMessageFilterTests
 	{
-		private static TestServer _host;
+		private static TestServerHost _host;
 
 		[ClassInitialize]
 		public static void StartServer(TestContext testContext)
 		{
-			var host = new WebHostBuilder().UseStartup<Startup>();
-			RawMessageFilterTests._host = new TestServer(host);
+			RawMessageFilterTests._host = TestHostFactory.CreateTestServer<Startup>();
+		}
+
+		[ClassCleanup]
+		public static void StopServer()
+		{
+			_host?.Dispose();
 		}
 
 		public ITestService CreateClient(Dictionary<string, object> headers = null)

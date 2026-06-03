@@ -10,8 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DeepEqual.Syntax;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.Model;
 using SoapCore.Tests.Utilities;
@@ -299,11 +297,9 @@ namespace SoapCore.Tests
 			}
 		}
 
-		private TestServer CreateTestHost()
+		private TestServerHost CreateTestHost()
 		{
-			var webHostBuilder = new WebHostBuilder()
-				.UseStartup<Startup>();
-			return new TestServer(webHostBuilder);
+			return TestHostFactory.CreateTestServer<Startup>();
 		}
 	}
 }

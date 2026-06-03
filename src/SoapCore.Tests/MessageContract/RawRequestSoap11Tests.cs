@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SoapCore.Tests.MessageContract.Models;
+using SoapCore.Tests.Utilities;
 
 namespace SoapCore.Tests.MessageContract
 {
@@ -334,12 +335,16 @@ namespace SoapCore.Tests.MessageContract
 			}
 		}
 
-		private TestServer CreateTestHost(Type serviceType)
+		private TestServerHost CreateTestHost(Type serviceType)
 		{
-			var webHostBuilder = new WebHostBuilder()
-				.UseStartup<Startup>()
-				.ConfigureServices(services => services.AddSingleton<IStartupConfiguration>(new StartupConfiguration(serviceType)));
-			return new TestServer(webHostBuilder);
+			var configurationKey = TestHostFactory.RegisterStartupConfiguration(new StartupConfiguration(serviceType));
+
+			return TestHostFactory.CreateTestServer(webBuilder =>
+			{
+				webBuilder
+					.UseSetting(TestHostFactory.StartupConfigurationKeySetting, configurationKey)
+					.UseStartup<Startup>();
+			});
 		}
 	}
 }
